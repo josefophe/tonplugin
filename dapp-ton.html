@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>TON dApp Example</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<div class="h">TON dApp Example</div>
+
+<div class="grey">
+    <span>My address is</span>
+    <span id="address"></span>
+</div>
+
+<button id="button" class="button">Send TON coins via TON Wallet Plugin</button>
+
+<div class="grey" style="margin-top: 50px">Code on <a href="https://github.com/toncenter/dapp-example" target="_blank">GitHub</a></div>
+
+<script>
+    const provider = window.ton;
+
+    if (!provider) {
+        alert('TON Wallet Plugin not installed');
+    } else {
+        console.log('isTonWallet=', provider.isTonWallet);
+
+        // A) Set provider in TonWeb.js
+        if (window.TonWeb) {
+            var tonweb = new TonWeb(provider);
+        }
+
+        // B) Use provider object directly
+        document.getElementById('button').addEventListener('click', async () => {
+            try {
+                // Request account access if needed
+                const accounts = await provider.send('ton_requestAccounts');
+                // Accounts now exposed, use them
+                const account = accounts[0] // We currently only ever provide a single account,
+                                            // but the array gives us some room to grow.
+                showAccountAddress(account);
+                // Send TONs
+                provider.send(
+                    'ton_sendTransaction',
+                    [{
+                        from: account,
+                        to: 'EQA0i8-CdGnF_DhUHHf92R1ONH6sIA9vLZ_WLcCIhfBBXwtG',
+                        value: '10000', // 10000 nanotons = 0.00001 TONs
+                        data: 'comment'
+                    }]
+                );
+            } catch (error) {
+                // User denied or Error
+                console.log(error);
+            }
+        });
+
+        provider.on('accountsChanged', function (accounts) {
+            console.log('accountsChanged', accounts);
+            const account = accounts[0];
+            showAccountAddress(account);
+        });
+
+        function showAccountAddress(address) {
+            document.getElementById('address').innerText = address;
+        }
+    }
+</script>
+</body>
+</html>
